@@ -1,0 +1,552 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>RoadSight Interactive Preview</title>
+  <script src="https://www.gstatic.com/antigravity/web/dev/tailwindcss.min.js"></script>
+  <style>
+    body {
+      background-color: var(--background, #f1f5f9);
+      color: var(--foreground, #0f172a);
+      font-family: system-ui, -apple-system, sans-serif;
+    }
+    .custom-scroll::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    .custom-scroll::-webkit-scrollbar-thumb {
+      background: #cbd5e1;
+      border-radius: 4px;
+    }
+  </style>
+</head>
+<body class="p-4 md:p-6 text-xs select-none">
+  <div class="max-w-6xl mx-auto space-y-5">
+    
+    <!-- TOP NAVIGATION BAR -->
+    <header class="bg-white border border-slate-200 rounded-2xl p-4 shadow-sm flex flex-wrap items-center justify-between gap-3">
+      <div class="flex items-center space-x-3">
+        <div class="flex items-center space-x-1 p-1.5 bg-slate-50 rounded-xl border border-slate-200">
+          <div class="w-2.5 h-6 bg-blue-600 rounded-xs"></div>
+          <div class="w-2.5 h-7 bg-blue-900 rounded-xs"></div>
+          <div class="w-2.5 h-5 bg-orange-500 rounded-xs"></div>
+        </div>
+        <div>
+          <h1 class="text-base font-extrabold text-slate-900 tracking-tight leading-none">RoadSight</h1>
+          <p class="text-xs uppercase tracking-wider text-slate-500 font-bold mt-0.5">SMART INFRASTRUCTURE</p>
+        </div>
+      </div>
+
+      <!-- Mode Switcher Pill -->
+      <div class="flex items-center bg-slate-100 p-1 rounded-xl border border-slate-200">
+        <button id="nav-btn-mobile" onclick="switchMainView('mobile')" class="px-4 py-2 rounded-lg font-bold text-xs bg-white text-blue-900 shadow-sm transition-all">
+          📱 Field Mobile Simulator
+        </button>
+        <button id="nav-btn-dashboard" onclick="switchMainView('dashboard')" class="px-4 py-2 rounded-lg font-bold text-xs text-slate-600 hover:text-slate-900 transition-all">
+          📊 Officer Dashboard
+        </button>
+        <button id="nav-btn-datasets" onclick="switchMainView('datasets')" class="px-4 py-2 rounded-lg font-bold text-xs text-slate-600 hover:text-slate-900 transition-all">
+          🗄️ Datasets (13 Free)
+        </button>
+      </div>
+
+      <div class="flex items-center space-x-2">
+        <span class="px-3 py-1 bg-emerald-50 text-emerald-800 border border-emerald-200 rounded-full font-bold text-xs">
+          ● Live ML Engine Active
+        </span>
+      </div>
+    </header>
+
+    <!-- SECTION 1: FIELD MOBILE SIMULATOR -->
+    <div id="view-mobile" class="space-y-4">
+      <div class="bg-blue-50/70 border border-blue-200 rounded-2xl p-4 flex flex-wrap items-center justify-between gap-2">
+        <div>
+          <strong class="text-blue-900 text-xs font-extrabold block">Interactive Mobile Simulator Mode</strong>
+          <span class="text-blue-800 text-xs">Test real-time stage classification, image quality checks, and before/after comparisons below.</span>
+        </div>
+        <div class="flex items-center space-x-2">
+          <span class="font-bold text-slate-700 text-xs">Quick Preset:</span>
+          <select id="mobile-preset-select" onchange="applyMobilePreset(this.value)" class="bg-white border border-slate-300 rounded-xl px-3 py-1.5 font-bold text-xs text-slate-800 focus:outline-none">
+            <option value="preset-wmm">1. Valid WBM/WMM Layer (92% Confidence)</option>
+            <option value="preset-dbm">2. Advanced DBM / Asphalt Laying (95%)</option>
+            <option value="preset-ducts">3. Utility Duct Trenching (89%)</option>
+            <option value="preset-blur">4. [Error Demo] Blurry Image Rejection</option>
+            <option value="preset-gps">5. [Error Demo] GPS Geo-fence Violation</option>
+            <option value="preset-fraud">6. [Error Demo] Duplicate Image Fraud</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Phone Mockup Container -->
+      <div class="flex justify-center">
+        <div class="w-full max-w-[390px] bg-slate-900 rounded-[44px] p-3 shadow-2xl border-4 border-slate-700">
+          <!-- Dynamic Island -->
+          <div class="w-28 h-5 bg-black rounded-full mx-auto mb-2 flex items-center justify-center space-x-2">
+            <div class="w-2 h-2 rounded-full bg-slate-800"></div>
+            <div class="w-2.5 h-2.5 rounded-full bg-blue-950"></div>
+          </div>
+
+          <!-- Phone Screen -->
+          <div class="bg-slate-50 rounded-[34px] p-4 h-[680px] overflow-y-auto custom-scroll flex flex-col justify-between text-slate-800">
+            
+            <!-- Mobile Screen: AI Analysis Result -->
+            <div id="phone-screen-result" class="space-y-3">
+              
+              <!-- Verification Badge -->
+              <div id="phone-verify-badge" class="bg-emerald-50 border border-emerald-200 rounded-xl p-2.5 flex items-center justify-between">
+                <div>
+                  <p class="font-bold text-emerald-900 text-xs">Capture verified</p>
+                  <p class="text-xs text-emerald-700">Location, time and authenticity passed</p>
+                </div>
+                <span class="px-2 py-0.5 bg-emerald-100 text-emerald-800 font-extrabold rounded text-xs">VERIFIED</span>
+              </div>
+
+              <!-- Hero Detected Stage Card -->
+              <div class="bg-blue-900 text-white p-4 rounded-2xl shadow-sm">
+                <div class="flex items-center justify-between">
+                  <div>
+                    <span class="text-blue-200 uppercase font-bold text-xs tracking-wider">DETECTED CONSTRUCTION STAGE</span>
+                    <h3 id="phone-stage-title" class="text-lg font-extrabold text-white mt-0.5">WBM / WMM</h3>
+                    <p id="phone-stage-sub" class="text-blue-200 text-xs">Water Bound Macadam</p>
+                  </div>
+                  <div class="w-12 h-12 rounded-full border-4 border-blue-400/30 border-t-orange-500 border-r-orange-500 flex items-center justify-center font-bold text-xs text-white">
+                    <span id="phone-stage-pct">40%</span>
+                  </div>
+                </div>
+                <div class="mt-3 pt-2.5 border-t border-white/15 flex items-center justify-between text-xs">
+                  <span class="text-blue-200">AI confidence</span>
+                  <span id="phone-conf-score" class="font-bold text-white">92% · High</span>
+                </div>
+              </div>
+
+              <!-- Estimated Completion -->
+              <div class="bg-white p-3.5 rounded-2xl border border-slate-200 shadow-2xs space-y-1.5">
+                <div class="flex items-center justify-between text-xs font-bold">
+                  <span class="text-slate-700">Estimated completion</span>
+                  <span id="phone-completion-text" class="text-slate-900 text-sm font-extrabold">40%</span>
+                </div>
+                <div class="w-full h-2 bg-slate-100 rounded-full overflow-hidden">
+                  <div id="phone-completion-bar" class="h-full bg-orange-500 rounded-full transition-all duration-500" style="width: 40%"></div>
+                </div>
+                <p id="phone-stretch-text" class="text-slate-500 text-xs">
+                  <strong class="text-slate-900">1.4 km</strong> completed of 3.5 km total stretch
+                </p>
+              </div>
+
+              <!-- Stage-wise Progress -->
+              <div class="bg-white p-3.5 rounded-2xl border border-slate-200 shadow-2xs space-y-2">
+                <span class="font-bold text-slate-800 text-xs block">Stage-wise completion</span>
+                <div class="space-y-1 text-xs">
+                  <div class="flex justify-between font-semibold text-slate-600"><span>Earthwork</span><span class="font-bold text-slate-900">100%</span></div>
+                  <div class="w-full h-1.5 bg-slate-100 rounded-full"><div class="h-full bg-blue-900 rounded-full w-full"></div></div>
+                </div>
+                <div class="space-y-1 text-xs">
+                  <div class="flex justify-between font-semibold text-slate-600"><span>GSB</span><span class="font-bold text-slate-900">100%</span></div>
+                  <div class="w-full h-1.5 bg-slate-100 rounded-full"><div class="h-full bg-blue-900 rounded-full w-full"></div></div>
+                </div>
+                <div class="space-y-1 text-xs">
+                  <div class="flex justify-between font-semibold text-slate-600"><span>WBM / WMM</span><span class="font-bold text-slate-900">61%</span></div>
+                  <div class="w-full h-1.5 bg-slate-100 rounded-full"><div class="h-full bg-blue-900 rounded-full w-[61%]"></div></div>
+                </div>
+                <div class="space-y-1 text-xs">
+                  <div class="flex justify-between font-semibold text-slate-600"><span>DBM</span><span class="font-bold text-slate-900">0%</span></div>
+                  <div class="w-full h-1.5 bg-slate-100 rounded-full"><div class="h-full bg-blue-900 rounded-full w-0"></div></div>
+                </div>
+              </div>
+
+              <!-- Interactive Before/After Split Slider -->
+              <div class="bg-white p-3.5 rounded-2xl border border-slate-200 shadow-2xs space-y-2">
+                <div class="flex items-center justify-between font-bold text-xs">
+                  <span class="text-slate-800">Before / after</span>
+                  <span class="text-blue-700 text-xs">Drag slider below &harr;</span>
+                </div>
+                
+                <div class="relative w-full h-40 rounded-xl overflow-hidden bg-slate-900 select-none">
+                  <!-- After Image (Background) -->
+                  <img id="slider-after-img" src="https://images.unsplash.com/photo-1541888946425-d0fbb186c5f7?auto=format&fit=crop&w=600&q=80" class="absolute inset-0 w-full h-full object-cover">
+                  <span class="absolute bottom-2 right-2 bg-black/70 text-white font-bold text-xs px-2 py-0.5 rounded">TODAY</span>
+
+                  <!-- Before Image (Overlay clipped) -->
+                  <div id="slider-clip" class="absolute inset-0 overflow-hidden" style="width: 50%">
+                    <img id="slider-before-img" src="https://images.unsplash.com/photo-1508873696983-2df5703bc225?auto=format&fit=crop&w=600&q=80" class="absolute inset-0 w-[350px] h-full object-cover max-w-none">
+                    <span class="absolute bottom-2 left-2 bg-black/70 text-white font-bold text-xs px-2 py-0.5 rounded">14 JUN</span>
+                  </div>
+
+                  <!-- Range Input Handle -->
+                  <input type="range" min="0" max="100" value="50" oninput="updateSlider(this.value)" class="absolute inset-x-0 bottom-3 w-full opacity-80 cursor-ew-resize accent-orange-500">
+                </div>
+              </div>
+
+            </div>
+
+            <!-- Error Modal Banner (When Error Preset is selected) -->
+            <div id="phone-error-card" class="hidden bg-red-50 border border-red-200 rounded-2xl p-4 space-y-2">
+              <div class="flex items-center space-x-2 text-red-600 font-extrabold text-xs">
+                <span>⚠️</span>
+                <span id="phone-error-title">Image Quality Verification Failed</span>
+              </div>
+              <p id="phone-error-msg" class="text-red-900 text-xs leading-relaxed"></p>
+              <div class="p-2.5 bg-amber-50 rounded-xl border border-amber-200 text-amber-900 text-xs">
+                <strong>Required User Correction:</strong>
+                <span id="phone-error-fix" class="block mt-0.5"></span>
+              </div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="pt-3 pb-1 grid grid-cols-2 gap-2">
+              <button onclick="applyMobilePreset('preset-wmm')" class="py-2.5 bg-white border border-slate-300 font-bold rounded-xl text-slate-700 hover:bg-slate-100">
+                Retake
+              </button>
+              <button onclick="alert('Daily progress report #DR-240616-0847 submitted and logged for ULB verification.')" class="py-2.5 bg-blue-900 hover:bg-blue-800 text-white font-bold rounded-xl shadow-md">
+                Submit report
+              </button>
+            </div>
+
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SECTION 2: OFFICER DASHBOARD -->
+    <div id="view-dashboard" class="hidden space-y-5">
+      
+      <!-- 4 KPI Metrics -->
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-2xs">
+          <span class="text-slate-500 font-bold text-xs">Total Projects</span>
+          <p class="text-2xl font-extrabold text-slate-900 mt-1">124</p>
+          <span class="text-xs text-emerald-600 font-bold">+8 this month</span>
+        </div>
+        <div class="bg-white p-4 rounded-2xl border border-emerald-200 shadow-2xs">
+          <span class="text-emerald-800 font-bold text-xs">On Track</span>
+          <p class="text-2xl font-extrabold text-slate-900 mt-1">89</p>
+          <span class="text-xs text-emerald-600 font-bold">71.8% of total</span>
+        </div>
+        <div class="bg-white p-4 rounded-2xl border border-amber-200 shadow-2xs">
+          <span class="text-amber-800 font-bold text-xs">Delayed</span>
+          <p class="text-2xl font-extrabold text-slate-900 mt-1">27</p>
+          <span class="text-xs text-amber-600 font-bold">4 need attention</span>
+        </div>
+        <div class="bg-white p-4 rounded-2xl border border-red-200 shadow-2xs">
+          <span class="text-red-800 font-bold text-xs">Fraud Alerts</span>
+          <p class="text-2xl font-extrabold text-slate-900 mt-1">8</p>
+          <span class="text-xs text-red-600 font-bold">3 new today</span>
+        </div>
+      </div>
+
+      <!-- Live GIS Road Map Section (Pune Metropolitan Region) -->
+      <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm space-y-3">
+        <div class="flex items-center justify-between">
+          <div>
+            <h3 class="text-sm font-extrabold text-slate-900">Live Project Map (Pune Highways & Urban Roads)</h3>
+            <p class="text-xs text-slate-500">Real-time GPS verified road construction stretches with RTK sub-5m precision.</p>
+          </div>
+          <div class="flex items-center space-x-3 text-xs font-bold">
+            <span class="flex items-center space-x-1.5 text-emerald-700">
+              <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 inline-block"></span>
+              <span>On Track</span>
+            </span>
+            <span class="flex items-center space-x-1.5 text-amber-700">
+              <span class="w-2.5 h-2.5 rounded-full bg-amber-500 inline-block"></span>
+              <span>Delayed</span>
+            </span>
+            <span class="flex items-center space-x-1.5 text-red-700">
+              <span class="w-2.5 h-2.5 rounded-full bg-red-500 inline-block"></span>
+              <span>Anomaly</span>
+            </span>
+          </div>
+        </div>
+
+        <!-- SVG High-Precision GIS Map of Pune Road Corridors -->
+        <div class="relative w-full h-64 bg-slate-100 rounded-xl overflow-hidden border border-slate-200">
+          <svg viewBox="0 0 800 320" class="w-full h-full">
+            <!-- Background Grid representing geospatial projection -->
+            <defs>
+              <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
+                <path d="M 40 0 L 0 0 0 40" fill="none" stroke="#e2e8f0" stroke-width="1"/>
+              </pattern>
+            </defs>
+            <rect width="800" height="320" fill="#f8fafc"/>
+            <rect width="800" height="320" fill="url(#grid)" opacity="0.6"/>
+
+            <!-- Mula-Mutha River Geometry for Pune Geo-orientation -->
+            <path d="M 120 180 Q 280 200 420 160 T 780 130" fill="none" stroke="#bfdbfe" stroke-width="12" opacity="0.5"/>
+            <text x="500" y="145" fill="#93c5fd" font-size="11" font-weight="700">Mula River</text>
+
+            <!-- Major Highway 1: NH-48 Tathawade Expressway Curve (Real Alignment) -->
+            <!-- White Outer Casing -->
+            <path d="M 180 30 Q 210 65 240 100 T 275 145 T 320 185" fill="none" stroke="#ffffff" stroke-width="11" stroke-linecap="round" stroke-linejoin="round"/>
+            <!-- Inner Highway Core Ribbon -->
+            <path d="M 180 30 Q 210 65 240 100 T 275 145 T 320 185" fill="none" stroke="#059669" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/>
+            <text x="280" y="105" fill="#065f46" font-size="11" font-weight="800">NH-48 Tathawade (84% Done)</text>
+            <circle cx="260" cy="125" r="18" fill="#10b981" opacity="0.15"/>
+            <circle cx="260" cy="125" r="7" fill="#10b981" stroke="#ffffff" stroke-width="2.5"/>
+
+            <!-- Major Highway 2: Pune Ring Road Package 3 (Curved Valley Alignment) -->
+            <!-- Completed Section (White Casing + Emerald Core) -->
+            <path d="M 130 160 Q 170 180 205 195 T 255 215" fill="none" stroke="#ffffff" stroke-width="12" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M 130 160 Q 170 180 205 195 T 255 215" fill="none" stroke="#059669" stroke-width="7.5" stroke-linecap="round" stroke-linejoin="round"/>
+            <!-- Remaining Section (Work Zone Dashed Line) -->
+            <path d="M 255 215 Q 295 230 330 242 T 375 255" fill="none" stroke="#ffffff" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M 255 215 Q 295 230 330 242 T 375 255" fill="none" stroke="#ea580c" stroke-width="6" stroke-dasharray="10 8" stroke-linecap="round"/>
+            <text x="130" y="240" fill="#1e3a8a" font-size="11" font-weight="800">Pune Ring Road P3 (Ch 12+200 - 15+700)</text>
+            <!-- GPS Accuracy Pulse Circle at exact frontier -->
+            <circle cx="255" cy="215" r="26" fill="#ea580c" opacity="0.25"/>
+            <circle cx="255" cy="215" r="8.5" fill="#ea580c" stroke="#ffffff" stroke-width="2.5"/>
+
+            <!-- Major Highway 3: Baner-Balewadi Link Road (Street Curve) -->
+            <path d="M 330 140 Q 360 155 385 170 T 415 190" fill="none" stroke="#ffffff" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M 330 140 Q 360 155 385 170 T 415 190" fill="none" stroke="#d97706" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
+            <text x="350" y="130" fill="#92400e" font-size="11" font-weight="800">Baner-Balewadi (42% Delayed)</text>
+            <circle cx="375" cy="165" r="7" fill="#d97706" stroke="#ffffff" stroke-width="2"/>
+
+            <!-- Major Highway 4: Katraj-Kondhwa Bypass Curve (Anomaly) -->
+            <path d="M 480 250 Q 530 262 575 272 T 630 282" fill="none" stroke="#ffffff" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M 480 250 Q 530 262 575 272 T 630 282" fill="none" stroke="#dc2626" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
+            <text x="500" y="240" fill="#991b1b" font-size="11" font-weight="800">Katraj-Kondhwa (GPS Anomaly)</text>
+            <circle cx="560" cy="268" r="7" fill="#dc2626" stroke="#ffffff" stroke-width="2"/>
+          </svg>
+
+          <!-- Floating Map Legend Overlay -->
+          <div class="absolute bottom-2.5 left-3 bg-white/95 backdrop-blur-xs px-3 py-1.5 rounded-lg border border-slate-200 text-xs font-semibold shadow-xs">
+            <span>Center: 18.536248° N, 73.740012° E · RTK Differential Precision: ±4.2m</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Split View: Project Detail & Road Stretch -->
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-5">
+        
+        <!-- Left 2 Cols: Road Stretch Chainage Visualizer -->
+        <div class="lg:col-span-2 bg-white p-5 rounded-2xl border border-slate-200 shadow-sm space-y-4">
+          <div class="flex items-center justify-between">
+            <div>
+              <span class="px-2.5 py-0.5 bg-emerald-100 text-emerald-800 rounded font-bold text-xs">ON TRACK</span>
+              <h2 class="text-base font-extrabold text-slate-900 mt-1">Pune Ring Road – Package 3</h2>
+              <p class="text-slate-500 text-xs">Project PRR-P3-024 · Mulshi, Pune · Contractor: Skyline Infra Pvt. Ltd.</p>
+            </div>
+            <span class="px-2.5 py-1 bg-blue-50 text-blue-900 border border-blue-200 rounded-lg font-bold text-xs">
+              GPS VERIFIED
+            </span>
+          </div>
+
+          <!-- Stretch Progress Bar Diagram -->
+          <div class="p-4 bg-slate-50 rounded-2xl border border-slate-200 space-y-3">
+            <div class="flex justify-between font-bold text-xs text-slate-700">
+              <span>Start: Ch 12+200 (Mulshi)</span>
+              <span class="text-orange-600">Active Frontier: 1.4 km done</span>
+              <span>End: Ch 15+700 (Total: 3.5 km)</span>
+            </div>
+
+            <!-- Visual segmented bar -->
+            <div class="h-6 w-full bg-slate-200 rounded-xl overflow-hidden flex shadow-inner">
+              <div class="h-full bg-emerald-500 flex items-center justify-center text-white font-extrabold text-xs" style="width: 40%">
+                1.4 KM COMPLETED
+              </div>
+              <div class="h-full bg-slate-400 flex items-center justify-center text-white font-extrabold text-xs" style="width: 60%">
+                2.1 KM REMAINING
+              </div>
+            </div>
+
+            <div class="flex items-center justify-between text-xs font-semibold text-slate-600 pt-1">
+              <span>Overall: 68% complete</span>
+              <span>Contract Deadline: 28 Sep 2025 (104 days remaining)</span>
+            </div>
+          </div>
+
+          <!-- Milestones Timeline -->
+          <div class="p-4 bg-white rounded-xl border border-slate-200 space-y-2">
+            <div class="flex justify-between items-center">
+              <span class="font-bold text-slate-800 text-xs">Milestones vs Contract</span>
+              <span class="px-2 py-0.5 bg-emerald-100 text-emerald-800 rounded font-bold text-xs">2 DAYS AHEAD</span>
+            </div>
+            <div class="grid grid-cols-5 gap-2 text-center text-xs pt-2">
+              <div class="p-2 bg-emerald-50 border border-emerald-200 rounded-lg">
+                <span class="font-bold text-emerald-900 block">Earthwork</span>
+                <span class="text-emerald-700">12 Mar ✓</span>
+              </div>
+              <div class="p-2 bg-emerald-50 border border-emerald-200 rounded-lg">
+                <span class="font-bold text-emerald-900 block">GSB</span>
+                <span class="text-emerald-700">28 Apr ✓</span>
+              </div>
+              <div class="p-2 bg-orange-50 border border-orange-200 rounded-lg">
+                <span class="font-bold text-orange-900 block">WMM</span>
+                <span class="text-orange-700">In Progress</span>
+              </div>
+              <div class="p-2 bg-slate-50 border border-slate-200 rounded-lg text-slate-400">
+                <span class="font-bold block">DBM</span>
+                <span>12 Aug</span>
+              </div>
+              <div class="p-2 bg-slate-50 border border-slate-200 rounded-lg text-slate-400">
+                <span class="font-bold block">Asphalt</span>
+                <span>28 Sep</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Right 1 Col: Active Alerts List -->
+        <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm space-y-4">
+          <div class="flex items-center justify-between">
+            <h3 class="font-extrabold text-slate-900 text-xs">Critical Alerts & Anomalies</h3>
+            <span class="w-5 h-5 bg-red-600 text-white rounded-full flex items-center justify-center font-bold text-xs">4</span>
+          </div>
+
+          <div class="space-y-3">
+            <div class="p-3 bg-red-50 border border-red-200 rounded-xl space-y-1">
+              <span class="px-2 py-0.5 bg-red-200 text-red-900 font-bold rounded text-xs">CRITICAL · pHash Match</span>
+              <h4 class="font-bold text-slate-900 text-xs">Potential duplicate image detected</h4>
+              <p class="text-slate-600 text-xs">NH-48 Tathawade — 99.4% perceptual match with capture from 03 June.</p>
+            </div>
+
+            <div class="p-3 bg-orange-50 border border-orange-200 rounded-xl space-y-1">
+              <span class="px-2 py-0.5 bg-orange-200 text-orange-900 font-bold rounded text-xs">HIGH · Geo-fence</span>
+              <h4 class="font-bold text-slate-900 text-xs">GPS outside project boundary</h4>
+              <p class="text-slate-600 text-xs">Katraj–Kondhwa Road — Pin is 1.8 km outside authorized chainage.</p>
+            </div>
+
+            <div class="p-3 bg-amber-50 border border-amber-200 rounded-xl space-y-1">
+              <span class="px-2 py-0.5 bg-amber-200 text-amber-900 font-bold rounded text-xs">MEDIUM · Delay</span>
+              <h4 class="font-bold text-slate-900 text-xs">Milestone delayed by 9 days</h4>
+              <p class="text-slate-600 text-xs">Baner–Balewadi Link — GSB layer rolling falling behind schedule.</p>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+
+    <!-- SECTION 3: DATASETS DIRECTORY -->
+    <div id="view-datasets" class="hidden bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-4">
+      <div>
+        <h2 class="text-base font-extrabold text-slate-900">13 Free & Open-Access Datasets for Testing</h2>
+        <p class="text-slate-500 text-xs">Publicly accessible datasets for road surface layers, pedestrian footpaths, and bitemporal change detection.</p>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div class="p-4 bg-slate-50 rounded-xl border border-slate-200 space-y-1.5">
+          <span class="px-2 py-0.5 bg-blue-100 text-blue-900 font-bold rounded text-xs">IIIT Hyderabad</span>
+          <h4 class="font-bold text-slate-900 text-xs">India Driving Dataset (IDD)</h4>
+          <p class="text-slate-600 text-xs">10,000 images, Indian road conditions, drivable area, unpaved surfaces. IDD-Lite &lt;50MB.</p>
+        </div>
+
+        <div class="p-4 bg-slate-50 rounded-xl border border-slate-200 space-y-1.5">
+          <span class="px-2 py-0.5 bg-emerald-100 text-emerald-900 font-bold rounded text-xs">Figshare / Tokyo</span>
+          <h4 class="font-bold text-slate-900 text-xs">Road Damage Dataset (RDD2022)</h4>
+          <p class="text-slate-600 text-xs">47,420 road images from 6 countries including India. Open access on Figshare.</p>
+        </div>
+
+        <div class="p-4 bg-slate-50 rounded-xl border border-slate-200 space-y-1.5">
+          <span class="px-2 py-0.5 bg-orange-100 text-orange-900 font-bold rounded text-xs">Roboflow Universe</span>
+          <h4 class="font-bold text-slate-900 text-xs">Construction Progress & Pavement</h4>
+          <p class="text-slate-600 text-xs">Annotated classes for asphalt, construction progress, concrete, and drainage.</p>
+        </div>
+
+        <div class="p-4 bg-slate-50 rounded-xl border border-slate-200 space-y-1.5">
+          <span class="px-2 py-0.5 bg-purple-100 text-purple-900 font-bold rounded text-xs">Meta / Mapillary</span>
+          <h4 class="font-bold text-slate-900 text-xs">Mapillary Vistas v2.0</h4>
+          <p class="text-slate-600 text-xs">25,000 street-level images with pedestrian kerbstone and sidewalk segmentations.</p>
+        </div>
+
+        <div class="p-4 bg-slate-50 rounded-xl border border-slate-200 space-y-1.5">
+          <span class="px-2 py-0.5 bg-slate-200 text-slate-900 font-bold rounded text-xs">TorchGeo / Beihang</span>
+          <h4 class="font-bold text-slate-900 text-xs">LEVIR-CD Change Detection</h4>
+          <p class="text-slate-600 text-xs">637 bitemporal image pairs for testing before/after comparison algorithms.</p>
+        </div>
+
+        <div class="p-4 bg-slate-50 rounded-xl border border-slate-200 space-y-1.5">
+          <span class="px-2 py-0.5 bg-teal-100 text-teal-900 font-bold rounded text-xs">IEEE DataPort</span>
+          <h4 class="font-bold text-slate-900 text-xs">Construction Traversability (CTD)</h4>
+          <p class="text-slate-600 text-xs">28 semantic classes from civil earthwork sites with loose aggregate and soil masks.</p>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <script>
+    function switchMainView(mode) {
+      document.getElementById('view-mobile').classList.add('hidden');
+      document.getElementById('view-dashboard').classList.add('hidden');
+      document.getElementById('view-datasets').classList.add('hidden');
+
+      document.getElementById('nav-btn-mobile').className = 'px-4 py-2 rounded-lg font-bold text-xs text-slate-600 hover:text-slate-900 transition-all';
+      document.getElementById('nav-btn-dashboard').className = 'px-4 py-2 rounded-lg font-bold text-xs text-slate-600 hover:text-slate-900 transition-all';
+      document.getElementById('nav-btn-datasets').className = 'px-4 py-2 rounded-lg font-bold text-xs text-slate-600 hover:text-slate-900 transition-all';
+
+      if (mode === 'mobile') {
+        document.getElementById('view-mobile').classList.remove('hidden');
+        document.getElementById('nav-btn-mobile').className = 'px-4 py-2 rounded-lg font-bold text-xs bg-white text-blue-900 shadow-sm transition-all';
+      } else if (mode === 'dashboard') {
+        document.getElementById('view-dashboard').classList.remove('hidden');
+        document.getElementById('nav-btn-dashboard').className = 'px-4 py-2 rounded-lg font-bold text-xs bg-white text-blue-900 shadow-sm transition-all';
+      } else if (mode === 'datasets') {
+        document.getElementById('view-datasets').classList.remove('hidden');
+        document.getElementById('nav-btn-datasets').className = 'px-4 py-2 rounded-lg font-bold text-xs bg-white text-blue-900 shadow-sm transition-all';
+      }
+    }
+
+    function updateSlider(val) {
+      document.getElementById('slider-clip').style.width = val + '%';
+    }
+
+    function applyMobilePreset(presetId) {
+      const errorCard = document.getElementById('phone-error-card');
+      const verifyBadge = document.getElementById('phone-verify-badge');
+      const resultCard = document.getElementById('phone-screen-result');
+
+      if (presetId === 'preset-wmm') {
+        errorCard.classList.add('hidden');
+        verifyBadge.classList.remove('hidden');
+        document.getElementById('phone-stage-title').innerText = 'WBM / WMM';
+        document.getElementById('phone-stage-sub').innerText = 'Water Bound Macadam';
+        document.getElementById('phone-conf-score').innerText = '92% · High';
+        document.getElementById('phone-stage-pct').innerText = '40%';
+        document.getElementById('phone-completion-text').innerText = '40%';
+        document.getElementById('phone-completion-bar').style.width = '40%';
+        document.getElementById('phone-stretch-text').innerHTML = '<strong class="text-slate-900">1.4 km</strong> completed of 3.5 km total stretch';
+      } else if (presetId === 'preset-dbm') {
+        errorCard.classList.add('hidden');
+        verifyBadge.classList.remove('hidden');
+        document.getElementById('phone-stage-title').innerText = 'DBM / Asphalt';
+        document.getElementById('phone-stage-sub').innerText = 'Dense Bituminous Macadam';
+        document.getElementById('phone-conf-score').innerText = '95% · High';
+        document.getElementById('phone-stage-pct').innerText = '75%';
+        document.getElementById('phone-completion-text').innerText = '75%';
+        document.getElementById('phone-completion-bar').style.width = '75%';
+        document.getElementById('phone-stretch-text').innerHTML = '<strong class="text-slate-900">2.6 km</strong> completed of 3.5 km total stretch';
+      } else if (presetId === 'preset-ducts') {
+        errorCard.classList.add('hidden');
+        verifyBadge.classList.remove('hidden');
+        document.getElementById('phone-stage-title').innerText = 'Duct Conduit Laying';
+        document.getElementById('phone-stage-sub').innerText = 'Utility Corridors & Chambers';
+        document.getElementById('phone-conf-score').innerText = '89% · High';
+        document.getElementById('phone-stage-pct').innerText = '50%';
+        document.getElementById('phone-completion-text').innerText = '50%';
+        document.getElementById('phone-completion-bar').style.width = '50%';
+        document.getElementById('phone-stretch-text').innerHTML = '<strong class="text-slate-900">1.75 km</strong> completed of 3.5 km total stretch';
+      } else if (presetId === 'preset-blur') {
+        verifyBadge.classList.add('hidden');
+        errorCard.classList.remove('hidden');
+        document.getElementById('phone-error-title').innerText = 'Image Quality Check: Rejected (Blurry)';
+        document.getElementById('phone-error-msg').innerText = 'Laplacian variance (42.0) is below the clarity threshold (55.0). The model cannot reliably distinguish aggregate grain texture.';
+        document.getElementById('phone-error-fix').innerText = 'Hold your mobile device steady, wait for camera auto-focus, and retake in clear daylight.';
+      } else if (presetId === 'preset-gps') {
+        verifyBadge.classList.add('hidden');
+        errorCard.classList.remove('hidden');
+        document.getElementById('phone-error-title').innerText = 'Geo-Fence Boundary Violation';
+        document.getElementById('phone-error-msg').innerText = 'Captured GPS coordinates (18.5450° N, 73.8990° E) are 3,840 meters away from the authorized chainage boundary.';
+        document.getElementById('phone-error-fix').innerText = 'Move within the designated road project corridor (Ch 12+200 to 15+700) and verify high-accuracy GPS.';
+      } else if (presetId === 'preset-fraud') {
+        verifyBadge.classList.add('hidden');
+        errorCard.classList.remove('hidden');
+        document.getElementById('phone-error-title').innerText = 'Duplicate Image Alert (pHash Collision)';
+        document.getElementById('phone-error-msg').innerText = 'Perceptual hash matches a submission from 03 June 2025 (99.8% similarity). Re-uploading cached photos is prohibited.';
+        document.getElementById('phone-error-fix').innerText = 'Take a fresh live picture of active physical work on the ground today.';
+      }
+    }
+  </script>
+</body>
+</html>
