@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import {
   Camera,
   CheckCircle,
@@ -20,11 +20,16 @@ import {
   Upload,
   Sparkles,
   XCircle,
-  Maximize2
+  Maximize2,
+  Server,
+  Activity,
+  Cpu
 } from 'lucide-react';
 import BeforeAfterSlider from './BeforeAfterSlider';
 import { ACTIVITIES, PROJECTS, TEST_PRESETS } from '../data/mockData';
 import { analyzeSiteImage } from '../utils/cvEngine';
+import { extractExifGps } from '../utils/exifParser';
+import { analyzeImageApi, checkApiHealth } from '../services/api';
 
 export default function FieldMobileView({
   onOpenReports,
@@ -41,7 +46,10 @@ export default function FieldMobileView({
   const [selectedProject, setSelectedProject] = useState(PROJECTS[0]);
   const [chainageInput, setChainageInput] = useState('12+200 to 15+700');
   const [currentGps, setCurrentGps] = useState({ lat: 18.536248, lng: 73.740012, accuracy: 4.2 });
+  const [gpsSourceLabel, setGpsSourceLabel] = useState('Device Geolocation (Browser)');
+  const [gpsSourceType, setGpsSourceType] = useState('browser_gps'); // 'photo_exif', 'browser_gps', 'preset'
   const [isGpsLoading, setIsGpsLoading] = useState(false);
+  const [rawFile, setRawFile] = useState(null);
   const [capturedImage, setCapturedImage] = useState(null);
   const [comparisonImage, setComparisonImage] = useState(PROJECTS[0].previousCapture.imageUrl);
   const [analysisResult, setAnalysisResult] = useState(null);
@@ -49,11 +57,29 @@ export default function FieldMobileView({
   const [selectedPreset, setSelectedPreset] = useState(null);
   const [errorModal, setErrorModal] = useState(null);
   const [submittedReportId, setSubmittedReportId] = useState('DR-240616-0847');
+  const [backendStatus, setBackendStatus] = useState({ online: false, model_loaded: false });
+  const [useStubToggle, setUseStubToggle] = useState(false);
 
   const fileInputRef = useRef(null);
+  const cameraInputRef = useRef(null);
+
+  // Monitor FastAPI Backend Server Health
+  useEffect(() => {
+    let isMounted = true;
+    const pollBackendHealth = async () => {
+      const status = await checkApiHealth();
+      if (isMounted) setBackendStatus(status);
+    };
+    pollBackendHealth();
+    const interval = setInterval(pollBackendHealth, 8000);
+    return () => {
+      isMounted = false;
+      clearInterval(interval);
+    };
+  }, []);
 
   // Listen for global Start Assessment button trigger
-  React.useEffect(() => {
+  useEffect(() => {
     const handleStart = () => {
       setScreen('capture');
     };
@@ -62,7 +88,7 @@ export default function FieldMobileView({
   }, []);
 
   // Auto detect GPS via browser Geolocation API with high precision
-  const handleDetectGPS = () => {
+  const handleDetectGPS = (customSourceNotice = null) => {
     setIsGpsLoading(true);
     if ('geolocation' in navigator) {
       navigator.geolocation.getCurrentPosition(
@@ -72,11 +98,15 @@ export default function FieldMobileView({
             lng: pos.coords.longitude,
             accuracy: pos.coords.accuracy ? Math.round(pos.coords.accuracy * 10) / 10 : 3.8
           });
+          setGpsSourceLabel(customSourceNotice || 'Device Geolocation API (Browser GNSS)');
+          setGpsSourceType('browser_gps');
           setIsGpsLoading(false);
         },
         () => {
           // Precise fallback for Pune Ring Road Package 3 active chainage
           setCurrentGps({ lat: 18.536248, lng: 73.740012, accuracy: 4.2 });
+          setGpsSourceLabel('Pune Highway Baseline (Corridor Calibrated)');
+          setGpsSourceType('preset');
           setIsGpsLoading(false);
         },
         { enableHighAccuracy: true, timeout: 8000, maximumAge: 0 }
@@ -93,24 +123,50 @@ export default function FieldMobileView({
     setSelectedProject(proj);
     setSelectedActivity(preset.activityId || 'road_surface');
     setCurrentGps(preset.gps);
+    setGpsSourceLabel('Interactive Test Preset GPS');
+    setGpsSourceType('preset');
     setCapturedImage(preset.imageUrl);
+    setRawFile(null);
     setComparisonImage(preset.comparisonUrl || proj.previousCapture.imageUrl);
   };
 
-  // Handle custom file upload
-  const handleFileUpload = (e) => {
-    const file = e.target.files[0];
+  // Handle custom file upload or camera capture with EXIF GPS extraction
+  const handleFileUpload = async (e) => {
+    const file = e.target.files && e.target.files[0];
     if (file) {
+      setRawFile(file);
+      setSelectedPreset(null);
+
+      // Read image for preview
       const reader = new FileReader();
       reader.onload = (event) => {
         setCapturedImage(event.target.result);
-        setSelectedPreset(null);
       };
       reader.readAsDataURL(file);
+
+      // Extract EXIF GPS metadata if available
+      try {
+        const exifData = await extractExifGps(file);
+        if (exifData.hasGps) {
+          setCurrentGps({
+            lat: exifData.lat,
+            lng: exifData.lng,
+            accuracy: 3.5,
+            source: 'photo_exif'
+          });
+          setGpsSourceLabel('Photo EXIF Metadata (Embedded)');
+          setGpsSourceType('photo_exif');
+        } else {
+          // Fall back gracefully to device geolocation
+          handleDetectGPS('Photo lacked EXIF tags. Used Browser Geolocation.');
+        }
+      } catch (err) {
+        handleDetectGPS('Using Browser Geolocation.');
+      }
     }
   };
 
-  // Run AI Stage Assessment
+  // Run AI Stage Assessment via FastAPI Backend (with client-side pre-check & fallback)
   const handleRunAssessment = async () => {
     if (!capturedImage) {
       alert('Please upload or capture a photo first.');
@@ -120,50 +176,68 @@ export default function FieldMobileView({
     setIsAnalyzing(true);
     setErrorModal(null);
 
-    // Create image element for canvas analysis
-    const img = new Image();
-    img.crossOrigin = 'anonymous';
-    img.src = capturedImage;
+    // Step 1: Instant Client-Side Quality Pre-Check (saves bandwidth and catches bad captures immediately)
+    if (!selectedPreset) {
+      const img = new Image();
+      img.crossOrigin = 'anonymous';
+      img.src = capturedImage;
 
-    img.onload = async () => {
-      const result = await analyzeSiteImage({
-        imageElement: img,
+      const preCheckPass = await new Promise((resolve) => {
+        img.onload = async () => {
+          try {
+            const preResult = await analyzeSiteImage({
+              imageElement: img,
+              activityType: selectedActivity,
+              project: selectedProject,
+              userGps: currentGps,
+              simulatedPreset: null
+            });
+            // If severe blur or darkness caught locally, stop early
+            if (!preResult.success && (preResult.error.type === 'IMAGE_BLURRY' || preResult.error.type === 'IMAGE_DARK')) {
+              setErrorModal(preResult.error);
+              resolve(false);
+              return;
+            }
+          } catch (e) {
+            // Ignore precheck error and proceed to backend
+          }
+          resolve(true);
+        };
+        img.onerror = () => resolve(true);
+      });
+
+      if (!preCheckPass) {
+        setIsAnalyzing(false);
+        return;
+      }
+    }
+
+    // Step 2: Call FastAPI Backend /api/analyze-image
+    try {
+      const result = await analyzeImageApi({
+        imageFile: rawFile,
+        imageBase64: capturedImage,
         activityType: selectedActivity,
         project: selectedProject,
         userGps: currentGps,
+        chainage: chainageInput,
+        useStub: useStubToggle,
         simulatedPreset: selectedPreset
       });
 
       setIsAnalyzing(false);
 
       if (!result.success) {
+        // Show server's error message in existing correction flow
         setErrorModal(result.error);
       } else {
         setAnalysisResult(result);
         setScreen('analysis_result');
       }
-    };
-
-    img.onerror = () => {
+    } catch (err) {
       setIsAnalyzing(false);
-      // Fallback evaluation
-      const fallback = {
-        success: true,
-        detectedStage: 'WBM / WMM',
-        stageCode: 'wmm',
-        description: 'Water Bound Macadam / Wet Mix Macadam layer compacted with vibratory roller.',
-        confidence: 92,
-        estimatedCompletionPercent: 40,
-        completedLengthKm: selectedProject.completedLengthKm || 1.4,
-        totalLengthKm: selectedProject.totalLengthKm || 3.5,
-        remainingLengthKm: 2.1,
-        stageWise: { 'Earthwork': 100, 'GSB': 100, 'WBM / WMM': 61, 'DBM': 0 },
-        verificationStatus: 'VERIFIED',
-        badgeText: 'Location, time and image authenticity passed'
-      };
-      setAnalysisResult(fallback);
-      setScreen('analysis_result');
-    };
+      alert(`Assessment error: ${err.message}`);
+    }
   };
 
   // Submit daily progress report
@@ -398,7 +472,7 @@ export default function FieldMobileView({
           {screen === 'capture' && (
             <div className="flex-1 flex flex-col justify-between overflow-y-auto no-scrollbar p-4">
               <div className="space-y-3.5">
-                {/* Top Nav */}
+                {/* Top Nav & Backend Status Badge */}
                 <div className="flex items-center justify-between pb-1">
                   <button
                     onClick={() => setScreen('home')}
@@ -407,7 +481,47 @@ export default function FieldMobileView({
                     <ArrowLeft className="w-4 h-4" />
                   </button>
                   <span className="font-bold text-xs text-slate-900">New Site Assessment</span>
-                  <div className="w-7"></div>
+                  
+                  {/* Live Backend Connection Indicator */}
+                  <div
+                    className={`flex items-center space-x-1 px-2 py-0.5 rounded-full text-[9px] font-bold border ${
+                      backendStatus.online
+                        ? 'bg-emerald-50 text-emerald-800 border-emerald-300'
+                        : 'bg-amber-50 text-amber-800 border-amber-300'
+                    }`}
+                    title={backendStatus.online ? 'FastAPI backend server active at port 8000' : 'Backend offline - using browser client fallback'}
+                  >
+                    <span className={`w-1.5 h-1.5 rounded-full ${backendStatus.online ? 'bg-emerald-500 animate-pulse' : 'bg-amber-500'}`}></span>
+                    <span>{backendStatus.online ? 'API Online' : 'Client Fallback'}</span>
+                  </div>
+                </div>
+
+                {/* Model / Stub Mode Switcher for Panel Presentation */}
+                <div className="bg-slate-50 border border-slate-200 rounded-xl p-2 flex items-center justify-between">
+                  <div className="flex items-center space-x-1.5 text-[10px] font-bold text-slate-700">
+                    <Cpu className="w-3.5 h-3.5 text-brand-700" />
+                    <span>Inference Mode:</span>
+                  </div>
+                  <div className="flex items-center space-x-1 bg-white p-0.5 rounded-lg border border-slate-200 text-[10px] font-bold">
+                    <button
+                      type="button"
+                      onClick={() => setUseStubToggle(false)}
+                      className={`px-2 py-1 rounded-md transition-all ${
+                        !useStubToggle ? 'bg-brand-700 text-white shadow-xs' : 'text-slate-600 hover:text-slate-900'
+                      }`}
+                    >
+                      Neural Model
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setUseStubToggle(true)}
+                      className={`px-2 py-1 rounded-md transition-all ${
+                        useStubToggle ? 'bg-amber-600 text-white shadow-xs' : 'text-slate-600 hover:text-slate-900'
+                      }`}
+                    >
+                      Stub Safe
+                    </button>
+                  </div>
                 </div>
 
                 {/* Road Project Selection */}
@@ -447,7 +561,7 @@ export default function FieldMobileView({
                   </select>
                 </div>
 
-                {/* Chainage Range & Live GPS */}
+                {/* Chainage Range & Live GPS with EXIF/Browser source detection */}
                 <div className="grid grid-cols-2 gap-2">
                   <div>
                     <label className="block text-[10px] font-bold text-slate-600 mb-0.5">Chainage Stretch</label>
@@ -463,7 +577,7 @@ export default function FieldMobileView({
                     <label className="block text-[10px] font-bold text-slate-600 mb-0.5 flex items-center justify-between">
                       <span>Live GPS Pin</span>
                       <button
-                        onClick={handleDetectGPS}
+                        onClick={() => handleDetectGPS()}
                         className="text-brand-600 hover:underline text-[9px] font-bold"
                       >
                         {isGpsLoading ? 'Pinging...' : 'Refresh'}
@@ -476,10 +590,23 @@ export default function FieldMobileView({
                       </div>
                       <div className="flex items-center justify-between text-[9px] text-emerald-700 font-sans mt-0.5 pt-0.5 border-t border-slate-100">
                         <span>Acc: ±{currentGps.accuracy || 4.2}m</span>
-                        <span className="font-bold text-blue-700">RTK Lock</span>
+                        <span className="font-bold text-blue-700 truncate max-w-[70px]" title={gpsSourceLabel}>
+                          {gpsSourceType === 'photo_exif' ? 'EXIF Tag' : 'GNSS Lock'}
+                        </span>
                       </div>
                     </div>
                   </div>
+                </div>
+
+                {/* GPS Source Indicator Pill */}
+                <div className="flex items-center justify-between px-2.5 py-1.5 bg-slate-50 border border-slate-200 rounded-lg text-[10px]">
+                  <span className="text-slate-500 font-medium">GPS Coordinate Source:</span>
+                  <span className={`font-bold flex items-center space-x-1 ${
+                    gpsSourceType === 'photo_exif' ? 'text-emerald-700' : 'text-blue-700'
+                  }`}>
+                    <span>{gpsSourceType === 'photo_exif' ? '📸' : '📡'}</span>
+                    <span>{gpsSourceLabel}</span>
+                  </span>
                 </div>
 
                 {/* Photo Upload & Quick Preset Dropdown */}
@@ -508,10 +635,30 @@ export default function FieldMobileView({
                     </select>
                   </div>
 
+                  {/* Capture / Upload Dual Buttons */}
+                  <div className="grid grid-cols-2 gap-2 mb-2">
+                    <button
+                      type="button"
+                      onClick={() => cameraInputRef.current && cameraInputRef.current.click()}
+                      className="flex items-center justify-center space-x-1.5 py-2 px-3 bg-gradient-to-r from-orange-500 to-amber-600 hover:from-orange-600 hover:to-amber-700 text-white rounded-xl text-[11px] font-bold shadow-xs active:scale-95 transition-all cursor-pointer"
+                    >
+                      <Camera className="w-3.5 h-3.5" />
+                      <span>Take Photo</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => fileInputRef.current && fileInputRef.current.click()}
+                      className="flex items-center justify-center space-x-1.5 py-2 px-3 bg-white border border-slate-300 hover:bg-slate-50 text-slate-700 rounded-xl text-[11px] font-bold shadow-2xs active:scale-95 transition-all cursor-pointer"
+                    >
+                      <Upload className="w-3.5 h-3.5 text-brand-700" />
+                      <span>Choose File</span>
+                    </button>
+                  </div>
+
                   {/* Preview / Capture Box */}
                   <div
                     onClick={() => fileInputRef.current && fileInputRef.current.click()}
-                    className="relative w-full h-44 rounded-2xl border-2 border-dashed border-slate-300 bg-white hover:border-brand-500 transition-all flex flex-col items-center justify-center p-2 cursor-pointer overflow-hidden group shadow-2xs"
+                    className="relative w-full h-40 rounded-2xl border-2 border-dashed border-slate-300 bg-white hover:border-brand-500 transition-all flex flex-col items-center justify-center p-2 cursor-pointer overflow-hidden group shadow-2xs"
                   >
                     {capturedImage ? (
                       <div className="relative w-full h-full">
@@ -526,19 +673,30 @@ export default function FieldMobileView({
                         </div>
                       </div>
                     ) : (
-                      <div className="text-center p-4">
-                        <div className="w-12 h-12 rounded-full bg-blue-50 text-brand-700 flex items-center justify-center mx-auto mb-2">
-                          <Camera className="w-6 h-6" />
+                      <div className="text-center p-3">
+                        <div className="w-10 h-10 rounded-full bg-blue-50 text-brand-700 flex items-center justify-center mx-auto mb-1.5">
+                          <Camera className="w-5 h-5" />
                         </div>
-                        <p className="text-xs font-bold text-slate-700">Tap to take site photo</p>
-                        <p className="text-[10px] text-slate-400 mt-0.5">Supports mobile camera capture & file uploads</p>
+                        <p className="text-xs font-bold text-slate-700">Ready to capture or upload</p>
+                        <p className="text-[10px] text-slate-400 mt-0.5">EXIF GPS extracted automatically from photos</p>
                       </div>
                     )}
+
+                    {/* Camera Input (rear environment camera on mobile) */}
+                    <input
+                      ref={cameraInputRef}
+                      type="file"
+                      accept="image/*"
+                      capture="environment"
+                      onChange={handleFileUpload}
+                      className="hidden"
+                    />
+
+                    {/* Regular File Upload Input */}
                     <input
                       ref={fileInputRef}
                       type="file"
                       accept="image/*"
-                      capture="environment"
                       onChange={handleFileUpload}
                       className="hidden"
                     />
@@ -562,7 +720,7 @@ export default function FieldMobileView({
                   {isAnalyzing ? (
                     <>
                       <Sparkles className="w-4 h-4 animate-spin" />
-                      <span>Processing Computer Vision & Geo-Fence...</span>
+                      <span>Running FastAPI Neural Stage Engine...</span>
                     </>
                   ) : (
                     <>
@@ -588,9 +746,15 @@ export default function FieldMobileView({
                     <ArrowLeft className="w-4 h-4" />
                   </button>
                   <span className="font-bold text-xs text-slate-900">AI analysis result</span>
-                  <button className="p-1.5 rounded-lg bg-white border border-slate-200 text-slate-700">
-                    <Bell className="w-4 h-4" />
-                  </button>
+                  
+                  {/* Backend Status Tag */}
+                  <span className={`text-[9px] font-extrabold px-2 py-0.5 rounded-md border ${
+                    analysisResult.backendConnected
+                      ? 'bg-emerald-50 text-emerald-800 border-emerald-200'
+                      : 'bg-slate-100 text-slate-700 border-slate-200'
+                  }`}>
+                    {analysisResult.backendConnected ? 'FastAPI Backend' : 'Client Mode'}
+                  </span>
                 </div>
 
                 {/* Top Capture Verified Banner */}
@@ -617,7 +781,7 @@ export default function FieldMobileView({
                       <h3 className="text-xl font-extrabold mt-0.5 text-white">
                         {analysisResult.detectedStage}
                       </h3>
-                      <p className="text-[11px] text-blue-100 mt-0.5">Water Bound Macadam</p>
+                      <p className="text-[11px] text-blue-100 mt-0.5">{analysisResult.description || 'Road surface layer verified'}</p>
                     </div>
                     {/* Radial progress ring */}
                     <div className="relative w-12 h-12 flex items-center justify-center">
@@ -628,6 +792,30 @@ export default function FieldMobileView({
                   <div className="mt-4 pt-3 border-t border-white/15 flex items-center justify-between text-xs">
                     <span className="text-blue-100 font-medium">AI confidence</span>
                     <span className="font-extrabold text-white">{analysisResult.confidence}% · High</span>
+                  </div>
+                </div>
+
+                {/* Inference Source & GPS Verification Pill */}
+                <div className="bg-white p-2.5 rounded-xl border border-slate-200 shadow-2xs space-y-1 text-[10px]">
+                  <div className="flex items-center justify-between">
+                    <span className="text-slate-500 font-semibold flex items-center space-x-1">
+                      <Cpu className="w-3 h-3 text-brand-700" />
+                      <span>Engine:</span>
+                    </span>
+                    <span className="font-bold text-brand-800">
+                      {analysisResult.inferenceSource === 'ml_model'
+                        ? 'FastAPI Neural Model (EfficientNet-B0)'
+                        : analysisResult.inferenceSource === 'stub_fallback'
+                        ? 'FastAPI Calibrated Stub'
+                        : 'Browser Client CV Engine'}
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between pt-1 border-t border-slate-100">
+                    <span className="text-slate-500 font-semibold flex items-center space-x-1">
+                      <MapPin className="w-3 h-3 text-emerald-600" />
+                      <span>Location Source:</span>
+                    </span>
+                    <span className="font-bold text-slate-800">{gpsSourceLabel}</span>
                   </div>
                 </div>
 
@@ -654,7 +842,7 @@ export default function FieldMobileView({
                 {/* Stage-wise Completion Bars */}
                 <div className="bg-white p-3.5 rounded-2xl border border-slate-200 shadow-2xs space-y-2">
                   <span className="text-xs font-bold text-slate-800 block">Stage-wise completion</span>
-                  {Object.entries(analysisResult.stageWise).map(([stageName, pct]) => (
+                  {Object.entries(analysisResult.stageWise || {}).map(([stageName, pct]) => (
                     <div key={stageName} className="space-y-0.5">
                       <div className="flex items-center justify-between text-[11px] font-semibold text-slate-600">
                         <span>{stageName}</span>
