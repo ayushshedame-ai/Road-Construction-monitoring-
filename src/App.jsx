@@ -72,6 +72,7 @@ export default function App() {
           onClick={() => {
             setActiveMode('field');
             setMobileScreen('capture');
+            window.dispatchEvent(new CustomEvent('start-assessment'));
           }}
           className="flex items-center space-x-2 px-4 py-2 bg-gradient-to-r from-orange-500 to-amber-600 hover:from-orange-600 hover:to-amber-700 text-white font-extrabold text-xs rounded-xl shadow-md hover:shadow-lg transition-all transform active:scale-95 cursor-pointer ring-2 ring-orange-300/50"
           title="Click to start site inspection and photo assessment"
