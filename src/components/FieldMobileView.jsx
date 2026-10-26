@@ -23,10 +23,16 @@ import {
   Maximize2,
   Server,
   Activity,
-  Cpu
+  Cpu,
+  HardHat,
+  Calendar,
+  TrendingUp,
+  AlertCircle,
+  Building2,
+  ChevronDown
 } from 'lucide-react';
 import BeforeAfterSlider from './BeforeAfterSlider';
-import { ACTIVITIES, PROJECTS, TEST_PRESETS } from '../data/mockData';
+import { ACTIVITIES, PROJECTS, TEST_PRESETS, REPORTS } from '../data/mockData';
 import { analyzeSiteImage } from '../utils/cvEngine';
 import { extractExifGps } from '../utils/exifParser';
 import { analyzeImageApi, checkApiHealth } from '../services/api';
@@ -275,194 +281,432 @@ export default function FieldMobileView({
             </div>
           </div>
 
-          {/* SCREEN 1: LOGIN */}
+          {/* SCREEN 1: CONTRACTOR LOGIN */}
           {screen === 'login' && (
-            <div className="flex-1 flex flex-col justify-between p-6 pt-4 bg-gradient-to-b from-slate-50 to-blue-50/40">
+            <div className="flex-1 flex flex-col justify-between p-6 pt-4 bg-gradient-to-b from-slate-50 to-orange-50/30">
               <div>
                 {/* Logo & Header */}
-                <div className="flex items-center space-x-2.5 mb-8">
-                  <div className="w-9 h-9 bg-brand-700 rounded-xl flex items-center justify-center text-white font-bold text-lg shadow-sm">
-                    <Layers className="w-5 h-5" />
+                <div className="flex items-center space-x-2.5 mb-6">
+                  <div className="w-10 h-10 bg-orange-500 rounded-2xl flex items-center justify-center text-white font-bold text-lg shadow-sm">
+                    <HardHat className="w-6 h-6" />
                   </div>
                   <div>
-                    <h1 className="font-bold text-lg text-slate-900 leading-tight">RoadSight</h1>
-                    <p className="text-[10px] tracking-wider text-slate-500 uppercase font-semibold">Smart Infrastructure</p>
+                    <h1 className="font-extrabold text-lg text-slate-900 leading-tight">RoadSight Contractor</h1>
+                    <p className="text-[10px] tracking-wider text-orange-600 uppercase font-bold">Field Execution & Billing Portal</p>
                   </div>
                 </div>
 
-                <div className="mb-6">
-                  <span className="text-[11px] font-bold text-accent-orange uppercase tracking-wider">Field Operations</span>
-                  <h2 className="text-2xl font-bold text-slate-900 mt-1">Welcome back</h2>
-                  <p className="text-xs text-slate-500 mt-1">Sign in to capture and report road progress.</p>
+                <div className="mb-5">
+                  <span className="text-[10px] font-bold text-orange-600 bg-orange-100 px-2 py-0.5 rounded-md uppercase tracking-wider">
+                    Contractor Authentication
+                  </span>
+                  <h2 className="text-xl font-bold text-slate-900 mt-2">Contractor Sign In</h2>
+                  <p className="text-xs text-slate-500 mt-0.5">Submit daily progress photos, track completion % and verify deadlines.</p>
                 </div>
 
                 {/* Form Inputs */}
-                <div className="space-y-4">
+                <div className="space-y-3.5">
                   <div>
-                    <label className="block text-xs font-semibold text-slate-700 mb-1.5">Email or Employee ID</label>
+                    <label className="block text-[11px] font-semibold text-slate-700 mb-1">Contractor Firm / License ID</label>
                     <div className="relative">
                       <input
                         type="text"
                         value={employeeId}
                         onChange={(e) => setEmployeeId(e.target.value)}
-                        className="w-full px-3.5 py-3 pl-10 text-xs rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-brand-600 bg-white"
-                        placeholder="e.g. MH-PWD-2041"
+                        className="w-full px-3.5 py-2.5 pl-10 text-xs rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-orange-500 bg-white font-medium"
+                        placeholder="e.g. CONT-SKY-041"
                       />
-                      <User className="w-4 h-4 text-slate-400 absolute left-3.5 top-3.5" />
+                      <Building2 className="w-4 h-4 text-slate-400 absolute left-3.5 top-3" />
                     </div>
                   </div>
 
                   <div>
-                    <label className="block text-xs font-semibold text-slate-700 mb-1.5">Password</label>
+                    <label className="block text-[11px] font-semibold text-slate-700 mb-1">Lead Field Engineer</label>
+                    <div className="relative">
+                      <input
+                        type="text"
+                        defaultValue="Arjun Kulkarni"
+                        className="w-full px-3.5 py-2.5 pl-10 text-xs rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-orange-500 bg-white font-medium"
+                      />
+                      <User className="w-4 h-4 text-slate-400 absolute left-3.5 top-3" />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-[11px] font-semibold text-slate-700 mb-1">Password</label>
                     <div className="relative">
                       <input
                         type="password"
                         defaultValue="demo1234"
-                        className="w-full px-3.5 py-3 pl-10 text-xs rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-brand-600 bg-white"
-                        placeholder="Enter your password"
+                        className="w-full px-3.5 py-2.5 pl-10 text-xs rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-orange-500 bg-white"
+                        placeholder="Enter password"
                       />
-                      <ShieldCheck className="w-4 h-4 text-slate-400 absolute left-3.5 top-3.5" />
+                      <ShieldCheck className="w-4 h-4 text-slate-400 absolute left-3.5 top-3" />
                     </div>
-                  </div>
-
-                  <div className="text-right">
-                    <button className="text-[11px] text-brand-600 font-semibold hover:underline">Forgot password?</button>
                   </div>
 
                   <button
                     onClick={() => setScreen('home')}
-                    className="w-full py-3.5 bg-brand-700 hover:bg-brand-800 text-white font-bold text-xs rounded-xl shadow-md transition-all active:scale-[0.98]"
+                    className="w-full py-3 bg-gradient-to-r from-orange-500 to-amber-600 hover:from-orange-600 hover:to-amber-700 text-white font-bold text-xs rounded-xl shadow-md transition-all active:scale-[0.98] cursor-pointer"
                   >
-                    Login securely
+                    Login as Contractor (Skyline Infra)
                   </button>
+
+                  <div className="pt-2 text-center">
+                    <button
+                      onClick={onSwitchToDashboard}
+                      className="text-xs text-brand-700 font-bold hover:underline flex items-center justify-center space-x-1 mx-auto"
+                    >
+                      <Building2 className="w-3.5 h-3.5" />
+                      <span>Are you a Supervising Officer? Switch to Officer Login &rarr;</span>
+                    </button>
+                  </div>
                 </div>
               </div>
 
               {/* Footer Badge */}
-              <div className="text-center pb-2">
-                <div className="inline-flex items-center space-x-1.5 text-[11px] text-slate-500 bg-white/80 border border-slate-200 px-3 py-1.5 rounded-full shadow-2xs">
-                  <ShieldCheck className="w-3.5 h-3.5 text-brand-700" />
-                  <span>Secured by Government of Maharashtra</span>
+              <div className="text-center pt-4 pb-1">
+                <div className="inline-flex items-center space-x-1.5 text-[10px] text-slate-500 bg-white border border-slate-200 px-3 py-1.5 rounded-full shadow-2xs">
+                  <ShieldCheck className="w-3.5 h-3.5 text-orange-600" />
+                  <span>Authorized Highway Works Contractor Portal</span>
                 </div>
               </div>
             </div>
           )}
 
-          {/* SCREEN 2: FIELD HOME */}
+          {/* SCREEN 2: CONTRACTOR DASHBOARD (PROGRESS %, DEADLINE TRACKER & REPORT SUBMISSION) */}
           {screen === 'home' && (
             <div className="flex-1 flex flex-col justify-between overflow-y-auto no-scrollbar">
-              <div className="p-4 pt-1 space-y-4">
-                {/* Header Profile Bar */}
+              <div className="p-4 pt-1 space-y-3.5">
+                
+                {/* Contractor Profile Bar */}
                 <div className="flex items-center justify-between pb-1">
                   <div className="flex items-center space-x-2">
-                    <div className="w-8 h-8 rounded-lg bg-brand-700 flex items-center justify-center text-white">
-                      <Layers className="w-4 h-4" />
+                    <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-orange-500 to-amber-600 flex items-center justify-center text-white shadow-xs">
+                      <HardHat className="w-5 h-5" />
+                    </div>
+                    <div>
+                      <h3 className="font-extrabold text-xs text-slate-900 leading-tight">Skyline Infra Pvt. Ltd.</h3>
+                      <p className="text-[10px] text-slate-500">Contractor ID: CONT-SKY-041</p>
                     </div>
                   </div>
-                  <div className="flex items-center space-x-2">
-                    <button className="p-2 rounded-full hover:bg-slate-200 text-slate-600 relative">
-                      <Bell className="w-4 h-4" />
-                      <span className="w-2 h-2 rounded-full bg-red-500 absolute top-1.5 right-1.5"></span>
+                  <div className="flex items-center space-x-1.5">
+                    <button
+                      onClick={() => setScreen('contractor_reports')}
+                      className="p-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-600 relative"
+                      title="Submitted Reports"
+                    >
+                      <FileText className="w-4 h-4 text-brand-700" />
                     </button>
-                    <div className="w-8 h-8 rounded-full bg-blue-100 border border-blue-300 text-blue-900 font-bold text-xs flex items-center justify-center">
-                      AK
+                    <button
+                      onClick={onSwitchToDashboard}
+                      className="px-2 py-1 rounded-lg bg-blue-50 hover:bg-blue-100 text-brand-700 font-bold text-[10px] border border-blue-200"
+                      title="Switch to Officer Dashboard"
+                    >
+                      Officer &rarr;
+                    </button>
+                  </div>
+                </div>
+
+                {/* Active Contract Project Switcher */}
+                <div className="bg-slate-50 border border-slate-200 rounded-xl p-2.5 space-y-1">
+                  <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block">
+                    Active Road Contract Package:
+                  </label>
+                  <select
+                    value={selectedProject.id}
+                    onChange={(e) => {
+                      const proj = PROJECTS.find((p) => p.id === e.target.value);
+                      if (proj) setSelectedProject(proj);
+                    }}
+                    className="w-full bg-white border border-slate-300 rounded-lg p-2 text-xs font-bold text-slate-800 focus:outline-none focus:ring-2 focus:ring-orange-500"
+                  >
+                    {PROJECTS.map((p) => (
+                      <option key={p.id} value={p.id}>
+                        {p.name} ({p.totalLengthKm} km) · {p.contractor}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                {/* CARD 1: WORK PERCENTAGE GAUGE */}
+                <div className="bg-white rounded-2xl p-4 border border-slate-200 shadow-sm space-y-3">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <span className="text-[10px] font-extrabold text-orange-600 uppercase tracking-wider">
+                        CONTRACTOR PHYSICAL PROGRESS
+                      </span>
+                      <h4 className="font-extrabold text-base text-slate-900 mt-0.5">
+                        {selectedProject.currentStage}
+                      </h4>
+                      <p className="text-[11px] text-slate-500">
+                        {selectedProject.chainage} · {selectedProject.location}
+                      </p>
+                    </div>
+                    {/* Radial Progress Ring */}
+                    <div className="relative w-14 h-14 flex items-center justify-center shrink-0">
+                      <div className="w-14 h-14 rounded-full border-4 border-slate-100 border-t-orange-500 border-r-orange-500 flex items-center justify-center bg-orange-50/50">
+                        <span className="text-xs font-extrabold text-slate-900">{selectedProject.progressPercent}%</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Progress Bar & Length Done */}
+                  <div>
+                    <div className="flex items-center justify-between text-[11px] font-semibold mb-1">
+                      <span className="text-slate-600">Total Stretch Completed</span>
+                      <span className="text-slate-900 font-bold">
+                        {selectedProject.completedLengthKm} km of {selectedProject.totalLengthKm} km
+                      </span>
+                    </div>
+                    <div className="w-full h-2.5 bg-slate-100 rounded-full overflow-hidden">
+                      <div
+                        className="h-full bg-gradient-to-r from-orange-500 to-amber-500 rounded-full transition-all duration-700"
+                        style={{ width: `${selectedProject.progressPercent}%` }}
+                      />
+                    </div>
+                  </div>
+
+                  {/* Stage-wise Ladder Mini Bars */}
+                  <div className="grid grid-cols-5 gap-1.5 pt-1 text-[9px] font-bold text-center">
+                    <div className="p-1 rounded bg-emerald-50 text-emerald-800 border border-emerald-200">
+                      EW 100%
+                    </div>
+                    <div className="p-1 rounded bg-emerald-50 text-emerald-800 border border-emerald-200">
+                      GSB 100%
+                    </div>
+                    <div className={`p-1 rounded border ${
+                      selectedProject.progressPercent >= 50
+                        ? 'bg-orange-50 text-orange-800 border-orange-300'
+                        : 'bg-slate-50 text-slate-400 border-slate-200'
+                    }`}>
+                      WMM {selectedProject.stageWiseCompletion?.['WBM / WMM'] || 61}%
+                    </div>
+                    <div className={`p-1 rounded border ${
+                      selectedProject.progressPercent >= 75
+                        ? 'bg-orange-50 text-orange-800 border-orange-300'
+                        : 'bg-slate-50 text-slate-400 border-slate-200'
+                    }`}>
+                      DBM 0%
+                    </div>
+                    <div className="p-1 rounded bg-slate-50 text-slate-400 border-slate-200">
+                      BC 0%
                     </div>
                   </div>
                 </div>
 
-                {/* Greeting */}
-                <div>
-                  <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">MONDAY, 16 JUNE</span>
-                  <h2 className="text-xl font-extrabold text-slate-900 leading-tight">Good morning, Arjun</h2>
-                  <p className="text-xs text-slate-500 mt-0.5">3 assigned projects · 1 update due today</p>
+                {/* CARD 2: DEADLINE & SCHEDULE TRACKING ("Is he behind deadline or not") */}
+                <div className={`rounded-2xl p-4 border shadow-sm space-y-3 ${
+                  selectedProject.status === 'ON TRACK'
+                    ? 'bg-emerald-50/50 border-emerald-200'
+                    : selectedProject.status === 'DELAYED'
+                    ? 'bg-amber-50/60 border-amber-300'
+                    : 'bg-red-50/60 border-red-300'
+                }`}>
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center space-x-1.5">
+                      <Clock className={`w-4 h-4 ${
+                        selectedProject.status === 'ON TRACK' ? 'text-emerald-700' : 'text-amber-700'
+                      }`} />
+                      <span className="font-extrabold text-xs text-slate-900">Contract Deadline & Pace</span>
+                    </div>
+
+                    {/* Status Badge */}
+                    <span className={`px-2.5 py-1 rounded-full text-[10px] font-extrabold tracking-wider ${
+                      selectedProject.status === 'ON TRACK'
+                        ? 'bg-emerald-100 text-emerald-800 border border-emerald-300'
+                        : selectedProject.status === 'DELAYED'
+                        ? 'bg-amber-100 text-amber-900 border border-amber-300'
+                        : 'bg-red-100 text-red-800 border border-red-300'
+                    }`}>
+                      {selectedProject.status === 'ON TRACK' && 'ON SCHEDULE'}
+                      {selectedProject.status === 'DELAYED' && 'BEHIND DEADLINE'}
+                      {selectedProject.status === 'ANOMALY' && 'GPS ANOMALY'}
+                    </span>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-3 text-xs pt-1">
+                    <div className="bg-white p-2.5 rounded-xl border border-slate-200/80">
+                      <span className="text-[10px] text-slate-400 font-bold block">CONTRACT DEADLINE</span>
+                      <strong className="text-slate-900 font-extrabold">{selectedProject.contractDeadline}</strong>
+                      <p className="text-[10px] text-slate-500 mt-0.5">{selectedProject.daysRemaining || 104} Days Left</p>
+                    </div>
+
+                    <div className="bg-white p-2.5 rounded-xl border border-slate-200/80">
+                      <span className="text-[10px] text-slate-400 font-bold block">SCHEDULE VARIANCE</span>
+                      <strong className={`font-extrabold ${
+                        selectedProject.status === 'ON TRACK' ? 'text-emerald-700' : 'text-amber-800'
+                      }`}>
+                        {selectedProject.status === 'ON TRACK' ? '2 Days Ahead' : '14 Days Delay'}
+                      </strong>
+                      <p className="text-[10px] text-slate-500 mt-0.5">
+                        {selectedProject.status === 'ON TRACK' ? 'Pace: Optimal' : 'Penalty Clause Active'}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="text-[11px] font-medium leading-relaxed">
+                    {selectedProject.status === 'ON TRACK' ? (
+                      <p className="text-emerald-900">
+                        ✅ <strong>Work is on schedule:</strong> Milestone target for WMM layer is pace-aligned. Next interim bill eligible for submission upon 70% chainage.
+                      </p>
+                    ) : (
+                      <p className="text-amber-950">
+                        ⚠️ <strong>Behind Deadline:</strong> PWD engineering supervision requires a 5% weekly pace acceleration to prevent liquidated damages deductions.
+                      </p>
+                    )}
+                  </div>
                 </div>
 
-                {/* Assigned Projects Header */}
-                <div className="flex items-center justify-between pt-1">
-                  <span className="text-xs font-bold text-slate-800">Assigned projects</span>
-                  <button onClick={onSwitchToDashboard} className="text-[11px] font-semibold text-brand-600 hover:underline">
-                    View map
+                {/* PRIMARY ACTION: TAKE GPS PHOTO & SUBMIT REPORT */}
+                <div className="bg-gradient-to-r from-orange-500 to-amber-600 rounded-2xl p-4 text-white shadow-md space-y-3">
+                  <div className="flex items-center justify-between">
+                    <div className="space-y-0.5">
+                      <h4 className="font-extrabold text-sm">Site Progress Inspection Due</h4>
+                      <p className="text-[11px] text-orange-100">Capture GPS-tagged site photos for physical progress verification</p>
+                    </div>
+                    <div className="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center">
+                      <Camera className="w-5 h-5 text-white" />
+                    </div>
+                  </div>
+
+                  <button
+                    onClick={() => setScreen('capture')}
+                    className="w-full py-2.5 bg-white text-orange-600 hover:bg-orange-50 font-extrabold text-xs rounded-xl shadow-sm flex items-center justify-center space-x-2 transition-all active:scale-95 cursor-pointer"
+                  >
+                    <Camera className="w-4 h-4" />
+                    <span>Take GPS Photo & Run Assessment &rarr;</span>
                   </button>
                 </div>
 
-                {/* Projects Card List */}
-                <div className="space-y-3">
-                  {PROJECTS.slice(0, 3).map((proj) => (
-                    <div
-                      key={proj.id}
-                      onClick={() => {
-                        setSelectedProject(proj);
-                        setScreen('capture');
-                      }}
-                      className="bg-white p-3.5 rounded-2xl border border-slate-200 shadow-sm hover:border-brand-500 transition-all cursor-pointer group"
+                {/* RECENT SUBMITTED REPORTS FOR THIS CONTRACTOR */}
+                <div className="bg-white rounded-2xl p-4 border border-slate-200 shadow-sm space-y-3">
+                  <div className="flex items-center justify-between">
+                    <span className="font-extrabold text-xs text-slate-900">Contractor Submission History</span>
+                    <button
+                      onClick={() => setScreen('contractor_reports')}
+                      className="text-[11px] font-bold text-orange-600 hover:underline"
                     >
-                      <div className="flex items-center justify-between mb-2">
-                        <span className="px-2.5 py-0.5 bg-blue-50 text-brand-700 font-bold text-[10px] rounded-md tracking-wider border border-blue-200">
-                          {proj.currentStage}
-                        </span>
-                        <span className="text-[10px] text-slate-400 font-medium">
-                          {proj.id === 'pune-ring-road-p3' ? 'Today, 08:42' : 'Yesterday, 17:20'}
-                        </span>
-                      </div>
-                      <h3 className="font-bold text-sm text-slate-900 group-hover:text-brand-700 transition-colors">
-                        {proj.name}
-                      </h3>
-                      <div className="flex items-center space-x-1 text-slate-500 text-xs mt-1">
-                        <MapPin className="w-3 h-3 text-slate-400" />
-                        <span>{proj.location}</span>
-                      </div>
+                      View all &rarr;
+                    </button>
+                  </div>
 
-                      {/* Progress Bar */}
-                      <div className="mt-3">
-                        <div className="flex items-center justify-between text-[11px] mb-1 font-semibold">
-                          <span className="text-slate-500">Overall progress</span>
-                          <span className="text-brand-700 font-bold">{proj.progressPercent}%</span>
+                  <div className="space-y-2">
+                    {REPORTS.slice(0, 2).map((rep) => (
+                      <div
+                        key={rep.id}
+                        className="p-2.5 rounded-xl border border-slate-100 bg-slate-50 flex items-center justify-between text-xs"
+                      >
+                        <div>
+                          <div className="flex items-center space-x-1.5">
+                            <strong className="text-slate-900 text-[11px]">{rep.id}</strong>
+                            <span className="px-1.5 py-0.2 bg-emerald-100 text-emerald-800 text-[9px] font-bold rounded">
+                              {rep.verification}
+                            </span>
+                          </div>
+                          <p className="text-[10px] text-slate-500 mt-0.5">{rep.stage} · {rep.date}</p>
                         </div>
-                        <div className="w-full h-1.5 bg-slate-100 rounded-full overflow-hidden">
-                          <div
-                            className="h-full bg-brand-700 rounded-full"
-                            style={{ width: `${proj.progressPercent}%` }}
-                          />
-                        </div>
+                        <span className="font-bold text-slate-700 text-[11px]">{rep.progress}</span>
                       </div>
+                    ))}
+                  </div>
+                </div>
 
-                      <div className="mt-3 pt-2.5 border-t border-slate-100 flex items-center justify-between text-[10px] text-slate-500">
-                        <span>{proj.id === 'pune-ring-road-p3' ? 'Capture due by 5:00 PM' : 'On schedule'}</span>
-                        <ChevronRight className="w-3.5 h-3.5 text-slate-400 group-hover:translate-x-0.5 transition-transform" />
+              </div>
+
+              {/* Contractor Bottom Navigation Bar */}
+              <div className="h-14 bg-white border-t border-slate-200 px-6 flex items-center justify-between text-[10px] font-semibold text-slate-500 z-30">
+                <button
+                  onClick={() => setScreen('home')}
+                  className="flex flex-col items-center text-orange-600 font-bold space-y-0.5"
+                >
+                  <Home className="w-4 h-4" />
+                  <span>Dashboard</span>
+                </button>
+                <button
+                  onClick={() => setScreen('capture')}
+                  className="flex flex-col items-center hover:text-orange-600 space-y-0.5"
+                >
+                  <Camera className="w-4 h-4" />
+                  <span>Take Photo</span>
+                </button>
+                <button
+                  onClick={() => setScreen('contractor_reports')}
+                  className="flex flex-col items-center hover:text-orange-600 space-y-0.5"
+                >
+                  <FileText className="w-4 h-4" />
+                  <span>My Reports</span>
+                </button>
+                <button
+                  onClick={onSwitchToDashboard}
+                  className="flex flex-col items-center text-brand-700 hover:text-brand-900 space-y-0.5"
+                  title="Switch to Officer Portal"
+                >
+                  <Building2 className="w-4 h-4" />
+                  <span>Officer Portal</span>
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* SCREEN: CONTRACTOR SUBMITTED REPORTS LIST */}
+          {screen === 'contractor_reports' && (
+            <div className="flex-1 flex flex-col justify-between overflow-y-auto no-scrollbar p-4">
+              <div className="space-y-3.5">
+                {/* Header */}
+                <div className="flex items-center justify-between pb-1">
+                  <button
+                    onClick={() => setScreen('home')}
+                    className="p-1.5 rounded-lg bg-white border border-slate-200 text-slate-700 hover:bg-slate-100"
+                  >
+                    <ArrowLeft className="w-4 h-4" />
+                  </button>
+                  <span className="font-bold text-xs text-slate-900">Contractor Progress Reports</span>
+                  <div className="w-7"></div>
+                </div>
+
+                <div className="bg-orange-50 border border-orange-200 rounded-xl p-3 text-[11px] text-orange-950 font-medium">
+                  <strong>Skyline Infra Submissions:</strong> Daily site photo logs verified by AI and submitted to PWD Supervising Officer for milestone bill approval.
+                </div>
+
+                {/* Reports List */}
+                <div className="space-y-2.5">
+                  {REPORTS.map((rep) => (
+                    <div
+                      key={rep.id}
+                      className="bg-white p-3 rounded-xl border border-slate-200 shadow-2xs space-y-2"
+                    >
+                      <div className="flex items-center justify-between">
+                        <span className="font-extrabold text-xs text-slate-900">{rep.id}</span>
+                        <span className="px-2 py-0.5 bg-emerald-100 text-emerald-800 text-[10px] font-bold rounded">
+                          {rep.verification}
+                        </span>
+                      </div>
+                      <div className="text-[11px] space-y-0.5 text-slate-600">
+                        <p><strong>Project:</strong> {rep.project}</p>
+                        <p><strong>Stage:</strong> {rep.stage} ({rep.progress})</p>
+                        <p className="flex items-center space-x-1 text-slate-500 text-[10px]">
+                          <MapPin className="w-3 h-3 text-emerald-600" />
+                          <span>{rep.coordinates} (Acc: {rep.accuracy})</span>
+                        </p>
+                      </div>
+                      <div className="pt-2 border-t border-slate-100 flex items-center justify-between text-[10px]">
+                        <span className="text-slate-400">Date: {rep.date}</span>
+                        <span className="font-bold text-emerald-700">Approved for Billing</span>
                       </div>
                     </div>
                   ))}
                 </div>
               </div>
 
-              {/* Bottom Sticky Action FAB */}
-              <div className="p-4 bg-gradient-to-t from-slate-50 via-slate-50 to-transparent sticky bottom-14 flex justify-center">
+              {/* Bottom Actions */}
+              <div className="pt-3">
                 <button
                   onClick={() => setScreen('capture')}
-                  className="px-6 py-3.5 bg-accent-orange hover:bg-orange-600 text-white font-bold text-xs rounded-2xl shadow-lg shadow-orange-500/30 flex items-center space-x-2 active:scale-95 transition-all"
+                  className="w-full py-3 bg-orange-500 hover:bg-orange-600 text-white font-bold text-xs rounded-xl flex items-center justify-center space-x-1.5 shadow-sm active:scale-95 transition-all"
                 >
                   <Camera className="w-4 h-4" />
-                  <span>Capture photo</span>
-                </button>
-              </div>
-
-              {/* Mobile Bottom Navigation Bar */}
-              <div className="h-14 bg-white border-t border-slate-200 px-6 flex items-center justify-between text-[10px] font-semibold text-slate-500 z-30">
-                <button className="flex flex-col items-center text-brand-700 space-y-0.5">
-                  <Home className="w-4 h-4" />
-                  <span>Home</span>
-                </button>
-                <button onClick={onSwitchToDashboard} className="flex flex-col items-center hover:text-brand-700 space-y-0.5">
-                  <FolderKanban className="w-4 h-4" />
-                  <span>Projects</span>
-                </button>
-                <button onClick={onOpenReports} className="flex flex-col items-center hover:text-brand-700 space-y-0.5">
-                  <FileText className="w-4 h-4" />
-                  <span>Reports</span>
-                </button>
-                <button onClick={() => setScreen('login')} className="flex flex-col items-center hover:text-brand-700 space-y-0.5">
-                  <User className="w-4 h-4" />
-                  <span>Profile</span>
+                  <span>Submit New Site Photo &rarr;</span>
                 </button>
               </div>
             </div>
