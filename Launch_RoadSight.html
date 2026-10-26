@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>RoadSight - Opening Application...</title>
+  <meta http-equiv="refresh" content="1; url=http://localhost:5173/">
+  <style>
+    body {
+      font-family: system-ui, -apple-system, sans-serif;
+      background: #0f172a;
+      color: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      margin: 0;
+    }
+    .card {
+      background: #1e293b;
+      padding: 32px 40px;
+      border-radius: 20px;
+      text-align: center;
+      box-shadow: 0 20px 40px rgba(0,0,0,0.5);
+      border: 1px solid #334155;
+      max-width: 440px;
+    }
+    .btn {
+      display: inline-block;
+      margin-top: 20px;
+      padding: 12px 28px;
+      background: #ea580c;
+      color: white;
+      text-decoration: none;
+      font-weight: bold;
+      border-radius: 12px;
+      transition: background 0.2s;
+    }
+    .btn:hover {
+      background: #c2410c;
+    }
+    .spinner {
+      width: 40px;
+      height: 40px;
+      border: 4px solid rgba(255,255,255,0.1);
+      border-top-color: #ea580c;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      margin: 0 auto 20px;
+    }
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div class="spinner"></div>
+    <h2 style="margin: 0 0 8px 0; font-size: 20px;">Launching RoadSight Portal...</h2>
+    <p style="color: #94a3b8; font-size: 14px; margin: 0 0 16px 0;">Redirecting to your active local server at <strong>http://localhost:5173/</strong></p>
+    <a href="http://localhost:5173/" class="btn">Click Here to Open Directly &rarr;</a>
+  </div>
+  <script>
+    window.location.href = "http://localhost:5173/";
+  </script>
+</body>
+</html>
