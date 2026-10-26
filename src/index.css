@@ -12,6 +12,39 @@ html, body {
   color: #0f172a !important;
 }
 
+/* Explicit Brand Utilities matching Reference Screenshots */
+.bg-brand-blue {
+  background-color: #1e3a8a !important;
+  color: #ffffff !important;
+}
+
+.bg-accent-orange {
+  background-color: #ea580c !important;
+  color: #ffffff !important;
+}
+
+.badge-wmm {
+  background-color: #e0f2fe !important;
+  color: #0369a1 !important;
+  border-color: #bae6fd !important;
+}
+
+.badge-dbm {
+  background-color: #ffedd5 !important;
+  color: #c2410c !important;
+  border-color: #fed7aa !important;
+}
+
+.badge-gsb {
+  background-color: #fef3c7 !important;
+  color: #b45309 !important;
+  border-color: #fde68a !important;
+}
+
+.progress-fill {
+  background-color: #1e3a8a !important;
+}
+
 /* Global custom styles */
 @layer utilities {
   .no-scrollbar::-webkit-scrollbar {
