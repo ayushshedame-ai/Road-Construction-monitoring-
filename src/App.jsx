@@ -8,35 +8,18 @@ import {
   ExternalLink,
   ShieldCheck,
   Check,
-  Play,
-  HardHat,
-  Building2,
-  UserCheck
+  Play
 } from 'lucide-react';
 import FieldMobileView from './components/FieldMobileView';
 import OfficerDashboardView from './components/OfficerDashboardView';
 import DatasetExplorerModal from './components/DatasetExplorerModal';
 import DesignThinkingModal from './components/DesignThinkingModal';
-import RoleLoginModal from './components/RoleLoginModal';
 
 export default function App() {
   const [activeMode, setActiveMode] = useState('field'); // 'field' or 'dashboard'
-  const [currentRole, setCurrentRole] = useState('contractor'); // 'contractor' or 'officer'
-  const [showRoleModal, setShowRoleModal] = useState(false);
   const [mobileScreen, setMobileScreen] = useState('home');
   const [showDatasetsModal, setShowDatasetsModal] = useState(false);
   const [showDesignThinkingModal, setShowDesignThinkingModal] = useState(false);
-
-  const handleRoleSelect = (role) => {
-    setCurrentRole(role);
-    if (role === 'contractor') {
-      setActiveMode('field');
-      setMobileScreen('home');
-    } else {
-      setActiveMode('dashboard');
-    }
-    setShowRoleModal(false);
-  };
 
   return (
     <div className="min-h-screen flex flex-col bg-slate-100 text-slate-800 font-sans selection:bg-brand-600 selection:text-white">
@@ -45,7 +28,7 @@ export default function App() {
       <header className="h-16 bg-white border-b border-slate-200/80 px-6 flex items-center justify-between sticky top-0 z-40 shadow-xs backdrop-blur-md">
         
         {/* Brand Logo */}
-        <div className="flex items-center space-x-3 cursor-pointer" onClick={() => { setActiveMode('field'); setCurrentRole('contractor'); }}>
+        <div className="flex items-center space-x-3 cursor-pointer" onClick={() => setActiveMode('field')}>
           <div className="flex items-center space-x-1 p-1.5 bg-slate-50 rounded-xl border border-slate-200">
             <div className="w-2.5 h-6 bg-blue-500 rounded-sm"></div>
             <div className="w-2.5 h-7 bg-brand-700 rounded-sm"></div>
@@ -57,81 +40,30 @@ export default function App() {
           </div>
         </div>
 
-        {/* ACTIVE ROLE BADGE & SWITCHER */}
-        <div className="flex items-center space-x-2">
-          {currentRole === 'contractor' ? (
-            <div className="flex items-center space-x-2 bg-amber-50 border border-amber-200/90 rounded-2xl px-3 py-1.5 shadow-xs">
-              <div className="w-7 h-7 rounded-xl bg-gradient-to-br from-amber-500 to-orange-500 text-white flex items-center justify-center font-bold shadow-xs">
-                <HardHat className="w-4 h-4" />
-              </div>
-              <div className="text-left hidden sm:block">
-                <div className="flex items-center space-x-1">
-                  <span className="text-[9px] font-extrabold uppercase text-amber-800 tracking-wider">Role</span>
-                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
-                </div>
-                <p className="text-xs font-bold text-slate-900 leading-none">Contractor: Skyline Infra</p>
-              </div>
-              <button
-                onClick={() => setShowRoleModal(true)}
-                className="ml-2 px-2.5 py-1 bg-white hover:bg-amber-100 text-amber-900 border border-amber-300 rounded-lg text-[11px] font-bold transition-all shadow-xs cursor-pointer"
-                title="Switch role between Contractor and Officer"
-              >
-                Switch
-              </button>
-            </div>
-          ) : (
-            <div className="flex items-center space-x-2 bg-blue-50 border border-blue-200/90 rounded-2xl px-3 py-1.5 shadow-xs">
-              <div className="w-7 h-7 rounded-xl bg-gradient-to-br from-brand-700 to-blue-600 text-white flex items-center justify-center font-bold shadow-xs">
-                <Building2 className="w-4 h-4" />
-              </div>
-              <div className="text-left hidden sm:block">
-                <div className="flex items-center space-x-1">
-                  <span className="text-[9px] font-extrabold uppercase text-brand-800 tracking-wider">Role</span>
-                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
-                </div>
-                <p className="text-xs font-bold text-slate-900 leading-none">Officer: PWD & NHAI</p>
-              </div>
-              <button
-                onClick={() => setShowRoleModal(true)}
-                className="ml-2 px-2.5 py-1 bg-white hover:bg-blue-100 text-brand-900 border border-blue-300 rounded-lg text-[11px] font-bold transition-all shadow-xs cursor-pointer"
-                title="Switch role between Contractor and Officer"
-              >
-                Switch
-              </button>
-            </div>
-          )}
-        </div>
-
         {/* Mode Switcher Pill (Field mobile vs Officer dashboard) */}
         <div className="flex items-center bg-slate-100 p-1 rounded-2xl border border-slate-200 shadow-inner">
           <button
-            onClick={() => {
-              setActiveMode('field');
-              setCurrentRole('contractor');
-            }}
-            className={`flex items-center space-x-2 px-4 py-2 rounded-xl text-xs font-bold transition-all ${
+            onClick={() => setActiveMode('field')}
+            className={`flex items-center space-x-2 px-5 py-2 rounded-xl text-xs font-bold transition-all ${
               activeMode === 'field'
                 ? 'bg-white text-brand-700 shadow-sm border border-slate-200/60'
                 : 'text-slate-600 hover:text-slate-900 hover:bg-white/50'
             }`}
           >
             <Smartphone className="w-3.5 h-3.5" />
-            <span>Field Mobile (Contractor)</span>
+            <span>Field mobile</span>
           </button>
 
           <button
-            onClick={() => {
-              setActiveMode('dashboard');
-              setCurrentRole('officer');
-            }}
-            className={`flex items-center space-x-2 px-4 py-2 rounded-xl text-xs font-bold transition-all ${
+            onClick={() => setActiveMode('dashboard')}
+            className={`flex items-center space-x-2 px-5 py-2 rounded-xl text-xs font-bold transition-all ${
               activeMode === 'dashboard'
                 ? 'bg-white text-brand-700 shadow-sm border border-slate-200/60'
                 : 'text-slate-600 hover:text-slate-900 hover:bg-white/50'
             }`}
           >
             <LayoutDashboard className="w-3.5 h-3.5" />
-            <span>Officer Dashboard</span>
+            <span>Officer dashboard</span>
           </button>
         </div>
 
@@ -139,9 +71,7 @@ export default function App() {
         <button
           onClick={() => {
             setActiveMode('field');
-            setCurrentRole('contractor');
             setMobileScreen('capture');
-            window.dispatchEvent(new CustomEvent('start-assessment'));
           }}
           className="flex items-center space-x-2 px-4 py-2 bg-gradient-to-r from-orange-500 to-amber-600 hover:from-orange-600 hover:to-amber-700 text-white font-extrabold text-xs rounded-xl shadow-md hover:shadow-lg transition-all transform active:scale-95 cursor-pointer ring-2 ring-orange-300/50"
           title="Click to start site inspection and photo assessment"
@@ -182,50 +112,31 @@ export default function App() {
             {/* Quick Helper Floating Bar for Field Mobile */}
             <div className="max-w-xl mx-auto pt-4 px-4 flex items-center justify-between text-xs text-slate-500">
               <span className="font-semibold">
-                Contractor view: Track milestone percentage, schedule delays, and submit GPS photos
+                Tip: Test different stages, error conditions, and photo uploads in the mobile simulator below:
               </span>
               <button
-                onClick={() => {
-                  setActiveMode('dashboard');
-                  setCurrentRole('officer');
-                }}
+                onClick={() => setActiveMode('dashboard')}
                 className="font-bold text-brand-700 hover:underline shrink-0 ml-2"
               >
-                Switch to Officer Dashboard &rarr;
+                Go to Officer Dashboard &rarr;
               </button>
             </div>
 
             <FieldMobileView
-              onOpenReports={() => {
-                setActiveMode('dashboard');
-                setCurrentRole('officer');
-              }}
-              onSwitchToDashboard={() => {
-                setActiveMode('dashboard');
-                setCurrentRole('officer');
-              }}
+              onOpenReports={() => setActiveMode('dashboard')}
+              onSwitchToDashboard={() => setActiveMode('dashboard')}
               activeScreen={mobileScreen}
               onScreenChange={setMobileScreen}
             />
           </div>
         ) : (
           <OfficerDashboardView
-            onSwitchToMobile={() => {
-              setActiveMode('field');
-              setCurrentRole('contractor');
-            }}
+            onSwitchToMobile={() => setActiveMode('field')}
           />
         )}
       </div>
 
       {/* MODALS */}
-      <RoleLoginModal
-        isOpen={showRoleModal}
-        onClose={() => setShowRoleModal(false)}
-        onSelectRole={handleRoleSelect}
-        currentRole={currentRole}
-      />
-
       <DatasetExplorerModal
         isOpen={showDatasetsModal}
         onClose={() => setShowDatasetsModal(false)}
