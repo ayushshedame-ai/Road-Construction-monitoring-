@@ -3,40 +3,9 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="color-scheme" content="only light" />
+    <meta name="darkreader-lock" />
     <title>RoadSight - Smart Infrastructure | ML Road Progress Monitoring</title>
-    <!-- Local Tailwind script & PostCSS compiled styles -->
-    <script src="/tailwindcss.js"></script>
-    <script>
-      tailwind.config = {
-        theme: {
-          extend: {
-            colors: {
-              brand: {
-                50: '#eff6ff',
-                100: '#dbeafe',
-                200: '#bfdbfe',
-                500: '#1d4ed8',
-                600: '#1e40af',
-                700: '#1e3a8a',
-                800: '#172554',
-                900: '#0f172a',
-                navy: '#1b2a4a',
-                sidebar: '#0d1f3d'
-              },
-              accent: {
-                orange: '#ea580c',
-                green: '#10b981',
-                amber: '#f59e0b',
-                red: '#ef4444'
-              }
-            },
-            fontFamily: {
-              sans: ['Plus Jakarta Sans', 'Inter', 'system-ui', '-apple-system', 'sans-serif'],
-            }
-          }
-        }
-      }
-    </script>
     <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -44,10 +13,13 @@
     <!-- Leaflet CSS -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
     <style>
+      :root {
+        color-scheme: only light !important;
+      }
       body {
         font-family: 'Plus Jakarta Sans', 'Inter', sans-serif;
-        background-color: #f1f5f9;
-        color: #0f172a;
+        background-color: #f1f5f9 !important;
+        color: #0f172a !important;
         margin: 0;
         padding: 0;
         -webkit-font-smoothing: antialiased;

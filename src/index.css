@@ -2,6 +2,16 @@
 @tailwind components;
 @tailwind utilities;
 
+:root {
+  color-scheme: only light !important;
+}
+
+html, body {
+  color-scheme: only light !important;
+  background-color: #f1f5f9 !important;
+  color: #0f172a !important;
+}
+
 /* Global custom styles */
 @layer utilities {
   .no-scrollbar::-webkit-scrollbar {
