@@ -31,7 +31,7 @@ if not errorlevel 1 goto BACKEND_RUNNING
 
 echo [*] Launching RoadSight FastAPI Backend (Port 8000)...
 start "RoadSight FastAPI Backend" /min cmd /c "cd /d "%PROJ_DIR%" && python -m uvicorn backend.server:app --host 127.0.0.1 --port 8000"
-timeout /t 2 /nobreak >nul
+ping -n 3 127.0.0.1 >nul
 goto CHECK_FRONTEND
 
 :BACKEND_RUNNING
