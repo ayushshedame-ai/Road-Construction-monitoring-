@@ -27,7 +27,6 @@ import {
 } from 'lucide-react';
 import ProjectMap from './ProjectMap';
 import { PROJECTS, ALERTS, REPORTS } from '../data/mockData';
-import { RoadSightLogoIcon } from '../App';
 
 export default function OfficerDashboardView({ onSwitchToMobile }) {
   const [activeTab, setActiveTab] = useState('dashboard'); // dashboard, project_detail, alerts, reports, verification_queue
@@ -55,10 +54,12 @@ export default function OfficerDashboardView({ onSwitchToMobile }) {
         <div>
           {/* Brand Logo Header */}
           <div className="p-5 flex items-center space-x-3 border-b border-white/10">
-            <RoadSightLogoIcon className="w-9 h-9" />
+            <div className="w-10 h-10 bg-brand-700 rounded-xl flex items-center justify-center text-white shadow-md">
+              <Layers className="w-6 h-6 text-white" />
+            </div>
             <div>
               <h1 className="font-extrabold text-lg text-white leading-tight tracking-tight">RoadSight</h1>
-              <p className="text-[9px] uppercase tracking-wider text-slate-400 font-semibold">SMART INFRASTRUCTURE</p>
+              <p className="text-[10px] uppercase tracking-wider text-slate-400 font-semibold">SMART INFRASTRUCTURE</p>
             </div>
           </div>
 
